@@ -4,25 +4,39 @@ using UnityEngine;
 
 public class PlayerBehaviour : MonoBehaviour
 {
-    public float moveSpeed = 10f;
-    public float rotateSpeed = 75f;
+    public float MoveSpeed = 10f;
+    public float RotateSpeed = 75f;
+
+    public float JumpVelocity = 5f;
+
+    public float DistanceToGround = 0.1f;
+    public LayerMask GroundLayer;
+
 
     private float _vInput;
     private float _hInput;
+
+    private bool _isJumping;
+
+    private CapsuleCollider _capCol;
 
     private Rigidbody _rigidBody;
     // Start is called before the first frame update
     void Start()
     {
         _rigidBody = GetComponent<Rigidbody>();
+
+        _capCol = GetComponent<CapsuleCollider>();
         
     }
 
     // Update is called once per frame
     void Update()
     {
-        _vInput = Input.GetAxis("Vertical") * moveSpeed;
-        _hInput = Input.GetAxis("Horizontal") * rotateSpeed;
+        _vInput = Input.GetAxis("Vertical") * MoveSpeed;
+        _hInput = Input.GetAxis("Horizontal") * RotateSpeed;
+
+        _isJumping |= Input.GetKeyDown(KeyCode.J);
 
         /**
         this.transform.Translate(Vector3.forward * _vInput * Time.deltaTime);
@@ -38,6 +52,25 @@ public class PlayerBehaviour : MonoBehaviour
 
         _rigidBody.MovePosition(this.transform.position + this.transform.forward * _vInput * Time.fixedDeltaTime);
         _rigidBody.MoveRotation(_rigidBody.rotation * angleRot);
+
+
+        if (_isJumping && IsGrounded())
+        {
+            _rigidBody.AddForce(Vector3.up * JumpVelocity, ForceMode.Impulse);
+
+        }
+
+        _isJumping = false;
         
     }
+
+    private bool IsGrounded()
+    {
+        Vector3 capsuleBottom = new Vector3(_capCol.bounds.center.x, _capCol.bounds.min.y, _capCol.bounds.center.z);
+        bool grounded = Physics.CheckCapsule(_capCol.bounds.center, capsuleBottom, DistanceToGround, GroundLayer, QueryTriggerInteraction.Ignore);
+
+        return grounded;
+
+    }
+
 }
